@@ -23,6 +23,7 @@ class JSAPIWrapper(val plugin: JavaScriptEnginePlugin) {
 
     private val registeredListeners = mutableListOf<RegisteredListener>()
     private val registeredCommands = mutableMapOf<String, RegisteredCommand>()
+    private val registeredTasks = mutableMapOf<String?, MutableSet<Int>>()
     private val commandMap: CommandMap? = initializeCommandMap()
 
     fun sendMessage(audience: Audience, message: String) {
@@ -128,29 +129,51 @@ class JSAPIWrapper(val plugin: JavaScriptEnginePlugin) {
     }
 
     fun runTaskLater(task: Runnable, delay: Long) {
-        Bukkit.getScheduler().runTaskLater(plugin, task, delay)
+        val id = Bukkit.getScheduler().runTaskLater(plugin, task, delay).taskId
+        registeredTasks.getOrPut(currentSourceFile) { mutableSetOf() }.add(id)
     }
 
     fun runTaskLaterAsync(task: Runnable, delay: Long) {
-        Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, task, delay)
+        val id = Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, task, delay).taskId
+        registeredTasks.getOrPut(currentSourceFile) { mutableSetOf() }.add(id)
     }
 
     fun runTaskTimer(task: Runnable, delay: Long, period: Long) {
-        Bukkit.getScheduler().runTaskTimer(plugin, task, delay, period)
+        val id = Bukkit.getScheduler().runTaskTimer(plugin, task, delay, period).taskId
+        registeredTasks.getOrPut(currentSourceFile) { mutableSetOf() }.add(id)
     }
 
     fun runTaskTimerAsync(task: Runnable, delay: Long, period: Long) {
-        Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, task, delay, period)
+        val id = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, task, delay, period).taskId
+        registeredTasks.getOrPut(currentSourceFile) { mutableSetOf() }.add(id)
     }
 
     fun cleanup() {
+        cancelAllTasks()
         unregisterAllListeners()
         unregisterAllCommands()
     }
 
     fun cleanup(sourceFile: String) {
+        cancelTasksFromFile(sourceFile)
         unregisterListenersFromFile(sourceFile)
         unregisterCommandsFromFile(sourceFile)
+    }
+
+    private fun cancelAllTasks() {
+        for (taskIds in registeredTasks.values) {
+            for (id in taskIds) {
+                Bukkit.getScheduler().cancelTask(id)
+            }
+        }
+        registeredTasks.clear()
+    }
+
+    private fun cancelTasksFromFile(sourceFile: String?) {
+        val taskIds = registeredTasks.remove(sourceFile) ?: return
+        for (id in taskIds) {
+            Bukkit.getScheduler().cancelTask(id)
+        }
     }
 
     private fun unregisterAllListeners() {
