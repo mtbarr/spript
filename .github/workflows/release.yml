@@ -32,13 +32,17 @@ jobs:
           echo "path=$jar" >> "$GITHUB_OUTPUT"
           echo "name=$(basename $jar)" >> "$GITHUB_OUTPUT"
 
+      - name: Get short SHA
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
       - name: Create Release
         if: steps.locate.outputs.path != ''
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
-          name: Build #${{ github.run_number }} (${{ github.sha[0:7] }})
+          name: Build #${{ github.run_number }} (${{ steps.vars.outputs.sha_short }})
           body: |
-            Automatic release from commit [${{ github.sha[0:7] }}](https://github.com/${{ github.repository }}/commit/${{ github.sha }}).
+            Automatic release from commit [${{ steps.vars.outputs.sha_short }}](https://github.com/${{ github.repository }}/commit/${{ github.sha }}).
           files: ${{ steps.locate.outputs.path }}
           make_latest: true
