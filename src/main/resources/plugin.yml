@@ -1,0 +1,21 @@
+name: Spript
+version: 1.0
+main: io.github.mtbarr.spript.JavaScriptEnginePlugin
+api-version: '1.21'
+description: JavaScript engine plugin para Spigot.
+
+commands:
+  jsreload:
+    description: Recarrega scripts JavaScript (especifique um nome para recarregar apenas um arquivo)
+    usage: /jsreload [script.js]
+
+libraries:
+  - org.jetbrains.kotlin:kotlin-stdlib:2.0.0
+  - org.openjdk.nashorn:nashorn-core:15.7
+  - net.kyori:adventure-api:4.17.0
+  - net.kyori:adventure-text-minimessage:4.17.0
+  - com.zaxxer:HikariCP:5.1.0
+  - org.postgresql:postgresql:42.7.3
+  - com.mysql:mysql-connector-j:8.3.0
+  - org.mariadb.jdbc:mariadb-java-client:3.3.3
+  - com.h2database:h2:2.2.224

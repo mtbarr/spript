@@ -1,0 +1,21 @@
+{
+  "name": "create-spript-project",
+  "version": "1.0.0",
+  "description": "Ferramenta CLI para gerar templates de projeto TypeScript para o plugin Spript.",
+  "main": "run.js",
+  "bin": {
+    "create-spript-project": "./run.js"
+  },
+  "scripts": {
+    "start": "node run.js"
+  },
+  "keywords": [
+    "spript",
+    "spigot",
+    "bukkit",
+    "minecraft",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT"
+}
