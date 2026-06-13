@@ -12,6 +12,21 @@ Scripts run inside Nashorn 15.7 with full ES6 support, transpiled through Babel 
 
 A companion CLI, `create-spript-project`, scaffolds a complete TypeScript workspace with Babel, type definitions for the entire Paper and Java standard libraries, and a custom Babel plugin that transforms Java import statements into `Java.type()` calls at compile time — giving you autocomplete for everything from `Player` to `ChunkSnapshot`.
 
+## Create a Spript project
+
+Download and run only the project generator:
+
+```bash
+bash install.sh my-spript-project
+```
+
+Or download the setup script remotely with curl:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/mtbarr/spript/main/install.sh -o install.sh
+bash install.sh my-spript-project
+```
+
 Under the hood, Spript manages listener registration, dynamic command mapping, executor service isolation for HTTP and SQL, and two-tier caching — all scoped per script file, so partial reloads only touch what they need to.
 
 MIT licensed.

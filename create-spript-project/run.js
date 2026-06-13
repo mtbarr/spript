@@ -47,7 +47,7 @@ const tsconfig = {
   compilerOptions: {
     target: "ES6",
     module: "ESNext",
-    moduleResolution: "Node",
+    moduleResolution: "Bundler",
     rootDir: "./src",
     strict: true,
     esModuleInterop: true,
@@ -218,18 +218,18 @@ try {
     '@grakkit-types/java'
   ].join(' ');
 
-  execSync(\`npm install --save-dev \${dependencies}\`, {
+  execSync(`npm install --save-dev ${dependencies}`, {
     cwd: projectPath,
     stdio: 'inherit'
   });
 
-  console.log('\\nProject created successfully!');
-  console.log('\\nStart coding by typing:');
-  console.log(\`  cd \${projectName}\`);
-  console.log(\`  code .\`);
-  console.log('\\nTo compile the code, use:');
-  console.log(\`  npm run build\`);
+  console.log('\nProject created successfully!');
+  console.log('\nStart coding by typing:');
+  console.log(`  cd ${projectName}`);
+  console.log(`  code .`);
+  console.log('\nTo compile the code, use:');
+  console.log(`  npm run build`);
   console.log('  (or "npm run dev" to compile automatically on save)');
 } catch (error) {
-  console.error('\\nError installing dependencies. Make sure you have Node.js and NPM installed.');
+  console.error('\nError installing dependencies. Make sure you have Node.js and NPM installed.');
 }
