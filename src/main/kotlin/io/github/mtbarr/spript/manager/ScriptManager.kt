@@ -6,6 +6,7 @@ import org.bukkit.event.HandlerList
 import org.openjdk.nashorn.api.scripting.NashornScriptEngineFactory
 import java.io.File
 import java.nio.file.Files
+import java.util.concurrent.ConcurrentHashMap
 import java.util.logging.Level
 import java.util.regex.Pattern
 import javax.script.Compilable
@@ -21,17 +22,36 @@ class ScriptManager(
 
     val engine: ScriptEngine
     val moduleCache = mutableMapOf<String, Any>()
+    private val javaTypeCache = ConcurrentHashMap<String, Any>()
     val apiWrapper = JSAPIWrapper(plugin)
     val httpManager = HttpManager()
     val sqlManager = SQLManager()
+    val mongoManager = MongoManager()
+    val redisManager = RedisManager()
+    val dotenvManager = DotenvManager(scriptsFolder)
 
     init {
+        configureNashornPerformance()
         val factory = NashornScriptEngineFactory()
         engine = factory.getScriptEngine(
             "--optimistic-types",
+            "--persistent-code-cache",
+            "--class-cache-size=512",
+            "--unstable-relink-threshold=32",
             "--language=es6"
         )
         injectGlobalAPI()
+    }
+
+    private fun configureNashornPerformance() {
+        val codeCacheDir = File(plugin.dataFolder, ".nashorn-code-cache")
+        val typeCacheDir = File(plugin.dataFolder, ".nashorn-type-cache")
+        codeCacheDir.mkdirs()
+        typeCacheDir.mkdirs()
+
+        System.setProperty("nashorn.persistent.code.cache", codeCacheDir.absolutePath)
+        System.setProperty("nashorn.typeInfo.maxFiles", "20000")
+        System.setProperty("nashorn.typeInfo.cacheDir", typeCacheDir.absolutePath)
     }
 
     private fun injectGlobalAPI() {
@@ -46,11 +66,14 @@ class ScriptManager(
                 compilableEngine.compile(regeneratorCode).eval()
             }
             
-            compilableEngine.compile("function require(modulePath) { return \$scriptManager.requireModule(modulePath); }").eval()
+            compilableEngine.compile("function require(modulePath) { return \$scriptManager.requireModule(modulePath); } function javaType(className) { return \$scriptManager.javaType(className); }").eval()
             engine.put("api", apiWrapper)
             engine.put("\$cache", plugin.cacheManager)
             engine.put("\$http", httpManager)
             engine.put("\$sql", sqlManager)
+            engine.put("\$mongo", mongoManager)
+            engine.put("\$redis", redisManager)
+            engine.put("\$dotenv", dotenvManager)
         } catch (e: Exception) {
             plugin.logger.log(Level.SEVERE, "Erro ao injetar API global", e)
         }
@@ -78,6 +101,29 @@ class ScriptManager(
         val exports = engine.get("exports") ?: Any()
         moduleCache[modulePath] = exports
         return exports
+    }
+
+    fun javaType(className: String): Any {
+        return javaTypeCache.computeIfAbsent(className) {
+            engine.eval("Java.type(${quoteJsString(className)})")
+        }
+    }
+
+    private fun quoteJsString(value: String): String {
+        return buildString {
+            append('"')
+            for (char in value) {
+                when (char) {
+                    '\\' -> append("\\\\")
+                    '"' -> append("\\\"")
+                    '\n' -> append("\\n")
+                    '\r' -> append("\\r")
+                    '\t' -> append("\\t")
+                    else -> append(char)
+                }
+            }
+            append('"')
+        }
     }
 
     fun loadAllScripts() {
@@ -267,6 +313,8 @@ class ScriptManager(
         HandlerList.unregisterAll(plugin)
         Bukkit.getScheduler().cancelTasks(plugin)
         apiWrapper.cleanup()
+        mongoManager.closeAll()
+        redisManager.closeAll()
         plugin.cacheManager.clearEphemeral()
         moduleCache.clear()
         plugin.logger.info("Scripts JavaScript descarregados.")
@@ -274,6 +322,7 @@ class ScriptManager(
 
     fun reloadAllScripts() {
         unloadAllScripts()
+        dotenvManager.reload()
         injectGlobalAPI()
         loadAllScripts()
     }

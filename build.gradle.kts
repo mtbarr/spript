@@ -19,6 +19,9 @@ dependencies {
     compileOnly("net.kyori:adventure-text-minimessage:4.17.0")
 
     compileOnly("com.zaxxer:HikariCP:5.1.0")
+    compileOnly("org.mongodb:mongodb-driver-sync:5.2.1")
+    compileOnly("io.github.cdimascio:dotenv-java:3.0.0")
+    compileOnly("redis.clients:jedis:5.2.0")
 
     compileOnly("org.projectlombok:lombok:1.18.38")
     annotationProcessor("org.projectlombok:lombok:1.18.38")

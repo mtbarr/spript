@@ -27,6 +27,29 @@ curl -fsSL https://raw.githubusercontent.com/mtbarr/spript/main/install.sh -o in
 bash install.sh my-spript-project
 ```
 
+## Environment variables
+
+Place a `.env` file in your server scripts folder and read it from scripts:
+
+```ts
+const mongoUrl = dotenv.require("MONGO_URL");
+const mongoClient = mongo.connect(mongoUrl);
+const players = mongo.collection(mongoClient, "spript", "players");
+```
+
+Redis connections can be reused the same way:
+
+```ts
+const redisClient = redis.connect(dotenv.require("REDIS_URL"));
+await redis.set(redisClient, "server:status", "online");
+
+const results = await redis.pipeline(redisClient, [
+  { command: "set", args: ["player:Steve:coins", "10"] },
+  { command: "incr", args: ["player:Steve:coins"] },
+  { command: "get", args: ["player:Steve:coins"] }
+]);
+```
+
 Under the hood, Spript manages listener registration, dynamic command mapping, executor service isolation for HTTP and SQL, and two-tier caching — all scoped per script file, so partial reloads only touch what they need to.
 
 MIT licensed.

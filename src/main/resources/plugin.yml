@@ -19,3 +19,6 @@ libraries:
   - com.mysql:mysql-connector-j:8.3.0
   - org.mariadb.jdbc:mariadb-java-client:3.3.3
   - com.h2database:h2:2.2.224
+  - org.mongodb:mongodb-driver-sync:5.2.1
+  - io.github.cdimascio:dotenv-java:3.0.0
+  - redis.clients:jedis:5.2.0

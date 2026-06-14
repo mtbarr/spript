@@ -83,7 +83,7 @@ fs.writeFileSync(
 const babelPluginJavaImports = `module.exports = function ({ types: t }) {
   const createJavaTypeCall = (className) =>
     t.callExpression(
-      t.memberExpression(t.identifier('Java'), t.identifier('type')),
+      t.identifier('javaType'),
       [t.stringLiteral(className)]
     );
 
@@ -144,6 +144,7 @@ declare function setInterval(callback: () => void, periodTicks: number): void;
 declare function runAsync(callback: () => void): void;
 declare function runSync(callback: () => void): void;
 declare function createItem(materialName: string, amount?: number, name?: string, loreArray?: string[]): org.bukkit.inventory.ItemStack | null;
+declare function javaType<T = any>(className: string): T;
 
 declare const cache: {
     set<T>(key: string, value: T, persistent?: boolean): void;
@@ -157,10 +158,58 @@ declare const http: {
     post(url: string, body: any, headers?: Record<string, string>): Promise<any>;
 };
 
+declare const dotenv: {
+    get(key: string, defaultValue?: string): string | null;
+    require(key: string): string;
+    has(key: string): boolean;
+    reload(): void;
+};
+
 declare const sql: {
     createPool(config: { url: string; user?: string; password?: string; poolSize?: number }): any;
     query(pool: any, queryStr: string, paramsArray?: any[]): Promise<any[]>;
     execute(pool: any, queryStr: string, paramsArray?: any[]): Promise<number>;
+};
+
+type MongoDocument = Record<string, any>;
+
+type RedisPipelineOperation = {
+    command: "get" | "set" | "setEx" | "setex" | "delete" | "del" | "exists" | "expire" | "ttl" | "incr" | "decr" | "hGet" | "hget" | "hSet" | "hset" | "hGetAll" | "hgetall" | "lPush" | "lpush" | "rPush" | "rpush" | "lRange" | "lrange" | "publish";
+    args: any[];
+};
+
+declare const mongo: {
+    connect(uri: string): any;
+    disconnect(client: any): void;
+    database(client: any, databaseName: string): any;
+    collection(client: any, databaseName: string, collectionName: string): any;
+    find(collection: any, filter?: MongoDocument): Promise<MongoDocument[]>;
+    findOne(collection: any, filter?: MongoDocument): Promise<MongoDocument | null>;
+    insertOne(collection: any, document: MongoDocument): Promise<string | null>;
+    updateOne(collection: any, filter: MongoDocument, update: MongoDocument): Promise<number>;
+    deleteOne(collection: any, filter: MongoDocument): Promise<number>;
+};
+
+declare const redis: {
+    connect(uri: string): any;
+    disconnect(client: any): void;
+    get(client: any, key: string): Promise<string | null>;
+    set(client: any, key: string, value: any): Promise<string>;
+    setEx(client: any, key: string, seconds: number, value: any): Promise<string>;
+    delete(client: any, keys: string | string[]): Promise<number>;
+    exists(client: any, key: string): Promise<boolean>;
+    expire(client: any, key: string, seconds: number): Promise<number>;
+    ttl(client: any, key: string): Promise<number>;
+    incr(client: any, key: string): Promise<number>;
+    decr(client: any, key: string): Promise<number>;
+    hGet(client: any, key: string, field: string): Promise<string | null>;
+    hSet(client: any, key: string, field: string, value: any): Promise<number>;
+    hGetAll(client: any, key: string): Promise<Record<string, string>>;
+    lPush(client: any, key: string, values: string | string[]): Promise<number>;
+    rPush(client: any, key: string, values: string | string[]): Promise<number>;
+    lRange(client: any, key: string, start: number, stop: number): Promise<string[]>;
+    publish(client: any, channel: string, message: any): Promise<number>;
+    pipeline(client: any, operations: RedisPipelineOperation[]): Promise<any[]>;
 };
 `;
 
@@ -203,7 +252,7 @@ fs.writeFileSync(
 
 fs.writeFileSync(
   path.join(projectPath, '.gitignore'),
-  "node_modules\ndist\n"
+  "node_modules\ndist\n.env\n"
 );
 
 console.log('Installing Babel, TypeScript, and Autocomplete dependencies...');
